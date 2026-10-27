@@ -49,7 +49,7 @@ This lab is **not** a full explanation of GitHub Copilot or Azure as technologie
 
 The Octocat team are behind schedule launching their new **Octocat Supply** application and are exploring Agentic Development practices to help them deliver the remaining features before deploying the full application to their Azure environment. Core functionality is still missing — like the shopping cart and other backlog items — and the testing and monitoring aren't yet up to Octocat standards for a reliable, secure application.
 
-You are given the existing application code and access to GitHub tools such as GitHub Copilot, and you complete the work by progressing through the challenges. The app is a full-stack supply chain platform with a **React + Vite + Tailwind** frontend and **four interchangeable API implementations** (TypeScript, C#, Python, Java) over a shared **SQLite** schema — pick whichever API language your team prefers; the challenges are language-agnostic.
+You are given the existing application code and access to GitHub tools such as GitHub Copilot, and you complete the work by progressing through the challenges. The app is a full-stack supply chain platform with a **React + Vite + Tailwind** frontend and two API implementations currently present in this checkout: **ASP.NET Core (C#)** and **FastAPI (Python)**. They use the shared **SQLite** schema; see [`src/README.md`](src/README.md) for the current layout and track-specific commands.
 
 ## Objectives
 
@@ -71,7 +71,7 @@ This MicroHack has a few but important prerequisites. Completing them before the
 In summary:
 
 - A **GitHub account** with access to your team's copy of this MicroHack repo and an **active GitHub Copilot seat** (Copilot Business/Enterprise, with Chat, agents, CLI, and MCP policies enabled).
-- Either **GitHub Codespaces** (recommended — nothing to install) **or** local **VS Code** with the **Dev Container** plus the **GitHub Copilot / Copilot Chat** extensions. The container preinstalls **Node.js 24, Python 3.13, .NET 10, Java 17**.
+- Either **GitHub Codespaces** (recommended — nothing to install) **or** local **VS Code** with the **Dev Container** plus the **GitHub Copilot / Copilot Chat** extensions. The container preinstalls **Node.js 24, Python 3.13, .NET 10, and Java 17**; this checkout currently includes Python and C# API tracks, plus the shared frontend.
 - For **Challenges 5 & 6**, **Azure access**:
   - An **Azure subscription** with budget.
   - A **Resource Group** for the team.

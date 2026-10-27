@@ -20,18 +20,18 @@ The aim here is a smooth, fast start — a good setup means the rest of the day 
 
 ### Task 2: Verify runtimes and enable Copilot
 
-- In Codespaces / the Dev Container, Node.js 24, Python 3.13, .NET 10, and Java 17 are preinstalled. Locally, install only the runtime for your chosen API track plus Node.js.
+- In Codespaces / the Dev Container, Node.js 24, Python 3.13, .NET 10, and Java 17 are preinstalled. This checkout includes Python and C# API tracks; locally, install the runtime for your chosen track plus Node.js.
 - Sign in to GitHub Copilot in the IDE. **Proof that it works** is a real Chat response about a file you have open — not just the extension being installed. If suggestions are empty, sign out/in, confirm your seat is assigned, and open a real source file so the agent has context.
 
 ### Task 3: Explore the repo
 
 - 🔑 The quickest way to satisfy this is to **ask Copilot Chat to summarise the repository structure and the main entry points**.
-- Identify: `src/` (the app — frontend + four API variants + shared SQLite schema, plus `src/docs/` architecture guidance), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 3 backlog & WorkIQ inputs), `.github/` (Copilot custom instructions & agents). Read `src/README.md`.
+- Identify: `src/` (the React frontend, Python and C# APIs, shared SQLite schema, and `src/docs/`), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 3 backlog & WorkIQ inputs), `.github/` (Copilot custom instructions & agents). Read `src/README.md`.
 
 ### Task 4: Run the app locally
 
-- Start the frontend and one API (see `src/README.md` — `make dev` / per-variant targets). Load a page in the browser and confirm the API responds.
-- Pick the API language your team is most comfortable with; the choice doesn't affect the concepts in later challenges.
+- Start the frontend and one API with a track-specific target such as `make dev-py` (see `src/README.md`). Avoid the default `make dev` target in this checkout; it still points at the removed TypeScript API.
+- Choose Python or C# for the API exercises; the later agentic practices are not tied to a particular language.
 
 ## Optional stretch — repo-wide agent context
 

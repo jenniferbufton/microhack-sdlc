@@ -24,7 +24,16 @@ Remediate + confirm healthy              ~4 min
 
 ### Task 1: Enable/confirm observability
 
-- Confirm the deployed app emits logs, metrics, and health/readiness signals. If it lacks health/readiness endpoints, add them and confirm logging/metrics are enabled on the Azure resources.
+- Start with the signals already configured by this checkout: Container Apps
+  logs are sent to Log Analytics, Azure Monitor exposes platform metrics, and
+  the API and frontend have basic liveness/readiness probes against `/`. The API
+  root route is only a responsiveness check; it does not verify database health.
+- The APIs do not expose a telemetry `/metrics` endpoint (such as Prometheus)
+  or configure OpenTelemetry/tracing. Their business metrics routes are not
+  application telemetry. Add instrumentation only if the exercise needs
+  signals beyond the platform metrics and logs. See the
+  [observability guide](../../src/docs/observability.md) for the current
+  boundaries.
 
 ### Task 2: Connect the SRE Agent
 
@@ -32,7 +41,9 @@ Remediate + confirm healthy              ~4 min
 
 ### Task 3: Simulate a clear fault
 
-- 💡 Pick a fault that clearly affects health — a **failing dependency** (e.g. break a connection string) or a **bad deploy** — rather than a subtle one that won't surface.
+- 💡 In a disposable, non-production environment, pick a reversible fault that
+  clearly affects health, such as a controlled bad deploy. Avoid changing
+  credentials or shared production configuration.
 
 ### Task 4: Investigate with the agent
 
@@ -40,7 +51,9 @@ Remediate + confirm healthy              ~4 min
 
 ### Task 5: Remediate and confirm
 
-- Apply the fix and confirm the agent reports healthy again. Note reliability gaps as backlog items — a natural feed into Challenge 7.
+- Apply the fix, verify the probes and application are healthy again, and check
+  what the agent reports. Note reliability gaps as backlog items — a natural
+  feed into Challenge 7.
 
 > No optional stretch. Fast finishers should document agent-caught vs. manually-investigated findings and turn reliability gaps into backlog items.
 

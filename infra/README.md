@@ -62,11 +62,17 @@ Create a GitHub Actions environment named `azure-dev`, then configure:
 - `AZURE_NAME_PREFIX` — 2–12 lowercase letters or digits; choose a globally unique ACR name.
 
 Configure an Azure workload identity federation credential for the repository
-and environment with subject:
+and environment. The usual subject shape is:
 
 ```text
 repo:<owner>/<repo>:environment:azure-dev
 ```
+
+Do not assume that placeholder is the complete subject in every organization.
+Copy the exact `issuer`, `subject claim`, and `audience` printed in the
+deployment workflow's **Azure login with OIDC** step under **Federated token
+details**. GitHub may include immutable owner or repository IDs in the subject;
+the Azure federated credential must match the emitted value exactly.
 
 The workflow creates the resource group if it does not exist. To permit that,
 the identity needs `Microsoft.Resources/subscriptions/resourceGroups/read` and,
@@ -78,7 +84,8 @@ can grant the Container Apps identities `AcrPull`. For a new resource group,
 bootstrap these role assignments through an Azure administrator or provide
 equivalent scoped permissions at the parent scope. Prefer a dedicated identity
 and the narrowest workable scope. No client secret or ACR admin password is
-stored in GitHub.
+stored in GitHub. `Contributor` and `AcrPush` alone do not grant permission to
+create the required role assignments.
 
 The OIDC identity also needs `Reader` at the subscription scope so Azure CLI can
 discover the subscription during login. `scripts/setup-oidc.sh` grants this

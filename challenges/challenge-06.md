@@ -10,7 +10,7 @@ Use agents to monitor the deployed Octocat Supply application and improve its re
 
 ## Actions
 
-* **Enable observability** — Confirm the deployed app emits the telemetry needed for monitoring (logs, metrics, health checks). Add health/readiness endpoints if it doesn't already expose them.
+* **Enable observability** — Confirm the deployed app's logs, Azure Monitor platform metrics, and health probes are available. This checkout forwards Container Apps logs to Log Analytics and configures basic root-path probes; it does not include a telemetry `/metrics` endpoint (such as Prometheus) or OpenTelemetry instrumentation. Add application-level telemetry if the exercise needs richer signals.
 * **Set up the SRE Agent** — Connect the Azure SRE Agent to the deployed resources so it can observe application health.
 * **Simulate an issue** — Introduce or trigger a fault (e.g. a failing dependency or a bad deploy) that clearly affects health.
 * **Investigate with the agent** — Use the SRE Agent to identify root cause and suggest remediation.
@@ -18,7 +18,7 @@ Use agents to monitor the deployed Octocat Supply application and improve its re
 
 ## Success criteria
 
-* The deployed application emits usable telemetry for monitoring.
+* The monitoring signals selected for the exercise are available to the SRE Agent; add application-level telemetry if the existing platform signals are not sufficient.
 * The Azure SRE Agent is monitoring the application.
 * An induced issue is detected and diagnosed with agent assistance (not just noticed manually).
 * The issue is remediated and health is restored.
