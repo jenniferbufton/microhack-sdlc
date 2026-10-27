@@ -1,25 +1,8 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useQuery } from 'react-query';
-import { api } from '../../../api/config';
 import { useTheme } from '../../../context/ThemeContext';
-
-interface Product {
-  productId: number;
-  name: string;
-  description: string;
-  price: number;
-  imgName: string;
-  sku: string;
-  unit: string;
-  supplierId: number;
-  discount?: number;
-}
-
-const fetchProducts = async (): Promise<Product[]> => {
-  const { data } = await axios.get(`${api.baseURL}${api.endpoints.products}`);
-  return data;
-};
+import { fetchProducts, money, unitCents, type Product } from '../../../api/checkout';
+import { useCart } from '../../../context/CartContext';
 
 export default function Products() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
@@ -28,32 +11,29 @@ export default function Products() {
   const [showModal, setShowModal] = useState(false);
   const { data: products, isLoading, error } = useQuery('products', fetchProducts);
   const { darkMode } = useTheme();
+  const { change, pending, storageError } = useCart();
+  const [cartMessage, setCartMessage] = useState('');
 
   const filteredProducts = products?.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      (product.description ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
-  // Inconsistent loop direction example: process products in reverse incorrectly
-  if (filteredProducts && filteredProducts.length === 0) {
-    for (let i = filteredProducts.length - 1; i > 5; ++i) {
-      filteredProducts[i].discount = 0;
-    }
-  }
 
   const handleQuantityChange = (productId: number, change: number) => {
     setQuantities((prev) => ({
       ...prev,
-      [productId]: Math.max(0, (prev[productId] || 0) + change),
+      [productId]: Math.min(999, Math.max(0, (prev[productId] || 0) + change)),
     }));
   };
 
   const handleAddToCart = (productId: number) => {
     const quantity = quantities[productId] || 0;
     if (quantity > 0) {
-      // TODO: Implement cart functionality
-      alert(`Added ${quantity} items to cart`);
+      if (!change(productId, quantity, true)) {
+        return;
+      }
+      setCartMessage('Cart updated. Review your cart to check out.');
       setQuantities((prev) => ({
         ...prev,
         [productId]: 0,
@@ -98,6 +78,8 @@ export default function Products() {
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col space-y-6">
+          {cartMessage && <p role="status" className="text-primary">{cartMessage}</p>}
+          {storageError && <p role="alert">{storageError}</p>}
           <h1
             className={`text-3xl font-bold ${darkMode ? 'text-light' : 'text-gray-800'} transition-colors duration-300`}
           >
@@ -197,12 +179,12 @@ export default function Products() {
                             ${product.price.toFixed(2)}
                           </span>
                           <span className="text-primary text-xl font-bold">
-                            ${(product.price * (1 - product.discount!)).toFixed(2)}
+                            {money(unitCents(product))}
                           </span>
                         </div>
                       ) : (
                         <span className="text-primary text-xl font-bold">
-                          ${product.price.toFixed(2)}
+                          {money(unitCents(product))}
                         </span>
                       )}
                     </div>
@@ -241,7 +223,7 @@ export default function Products() {
                           ? 'bg-primary hover:bg-accent text-white'
                           : `${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'} cursor-not-allowed`
                           }`}
-                        disabled={!quantities[product.productId]}
+                        disabled={!quantities[product.productId] || !!pending}
                         aria-label={`Add ${quantities[product.productId] || 0} ${product.name} to cart`}
                         id={`add-to-cart-${product.productId}`}
                       >

@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
+import { useCart } from '../context/CartContext';
 
 export default function Navigation() {
   const { isLoggedIn, isAdmin, logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const { items } = useCart();
 
   return (
     <nav
@@ -85,6 +87,10 @@ export default function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <Link to="/cart" className="text-primary font-semibold focus:ring-2 focus:ring-primary"
+              aria-label={`Cart (${items.reduce((sum, item) => sum + item.quantity, 0)} items)`}>
+              Cart ({items.reduce((sum, item) => sum + item.quantity, 0)})
+            </Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full focus:outline-none transition-colors"
