@@ -1,5 +1,34 @@
 # React + TypeScript + Vite
 
+## Cart and demo checkout
+
+The product page adds items to a browser-persisted cart. Open the cart from
+navigation to edit quantities or remove items, then check out with a customer name,
+branch, and explicit approved/declined demo payment method. No real card details
+are collected and no money is charged.
+
+- Catalog discounts are applied and unit prices rounded half-up to USD cents.
+- One optional promotional code can be applied; the API quotes the final total and
+  revalidates the code at checkout. Expiry or price conflicts require an explicit
+  total review, and successful receipts show the stored discount snapshot.
+- The Python API validates prices and creates the order and all line items atomically.
+- Declines, cancellation, and errors retain the cart.
+- An unresolved attempt locks editing. Retry it with the saved request key after
+  network errors or reloads; do not reset storage to bypass an unknown outcome.
+- Only unchanged purchased lines are removed after success. Items added or edited
+  in another tab are preserved.
+- Local storage contains the cart, unresolved attempt, and latest demo receipt
+  (including customer name). Use demo names on shared browsers. Cart edits or the
+  cart reset action remove the prior receipt; resetting is blocked while an
+  attempt is unresolved.
+- Storage failures are shown explicitly. Cart editing can continue in memory, but
+  checkout requires successfully persisted state.
+
+Run the frontend in Docker at `http://localhost:8080`, with the Python API enabled
+for mock payments. See [the Docker checkout guide](../docs/build.md#docker-frontend-and-demo-checkout)
+for build, environment, and browser-test commands. Runtime API hosts must be
+reachable from the **browser**, not just the frontend container.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

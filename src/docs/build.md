@@ -4,9 +4,91 @@ This guide provides instructions for building, running, and testing the OctoCAT 
 
 ## Prerequisites
 
+For the local Python API plus Docker frontend checkout workflow, use the
+[Docker frontend and demo checkout](#docker-frontend-and-demo-checkout) section.
+It does not require a host Node installation.
+
 - Node.js (version 18 or higher)
 - npm (latest version recommended)
 - Docker/Podman (optional, for containerization)
+
+## Docker frontend and demo checkout
+
+Start Docker Desktop. From `src/api-py`, start the Python API using its existing
+virtual environment:
+
+```sh
+PAYMENT_PROVIDER=mock PAYMENT_MOCK_ENABLED=true PAYMENT_CURRENCY=USD \
+API_CORS_ORIGINS=http://localhost:8080,http://localhost:5137 \
+./.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 3000
+```
+
+The API applies the additive checkout-receipt migration on startup. Set `DB_FILE`
+to a separate SQLite path if you want an isolated demo database. The simulator is
+disabled unless all three payment settings above match; it uses no secret keys.
+The discount-code migration creates no campaigns. Only provision an approved code,
+percentage, and UTC expiry in the API database; do not use a production campaign
+while running browser tests.
+
+From the repository root:
+
+```sh
+docker build -t octocat-frontend ./src/frontend
+docker run --rm --name octocat-frontend -p 8080:80 \
+  -e API_HOST=localhost -e API_PORT=3000 -e API_PROTOCOL=http \
+  octocat-frontend
+```
+
+If that container name or port is already in use, inspect the existing container
+before stopping/replacing it. Open `http://localhost:8080/products`, add products,
+open Cart, and select Checkout. Choose an existing branch and a demo payment method.
+Approved payments show an order receipt; declines leave the cart intact. Cancellation
+before submission also leaves it intact. Network failures retain a saved attempt;
+use Retry saved checkout to recover without creating another order.
+The checkout can apply one percentage discount code. The API provides authoritative
+quotes and checks the code and total again during order creation. Expiry or a price
+change blocks submission until the code is removed or replaced and the revised
+total is explicitly reviewed.
+
+`API_HOST` becomes a browser-side runtime URL. For a browser on the host machine,
+`localhost:3000` reaches the host API. `host.docker.internal` is useful for a client
+inside Docker, but is not automatically resolvable by the host browser. Keep CORS
+origins explicit. No API credentials belong in the frontend runtime configuration.
+
+### Validation
+
+From `src/`, run `make test-py build-py`. Tests should use an isolated `DB_FILE`.
+From the repository root, build and lint without installing Node on the host:
+
+```sh
+docker build --target builder -t octocat-frontend-check ./src/frontend
+docker run --rm octocat-frontend-check npm run lint
+```
+
+The builder runs `npm run build`, including the TypeScript check. With the deployed
+frontend and mock-enabled Python API running, use the existing Playwright runner
+from `src/frontend` (or a compatible Playwright container):
+
+```sh
+PLAYWRIGHT_BASE_URL=http://localhost:8080 PLAYWRIGHT_WEB_SERVER=false npm run test:e2e
+```
+
+`E2E_API_URL` optionally overrides the browser/API test URL through the shared test
+fixture, without changing the deployed frontend configuration. Container-based
+browser tests can use a localhost frontend origin on the Docker host network and
+`E2E_API_URL=http://host.docker.internal:3000`. Add the exact frontend origin to
+`API_CORS_ORIGINS`. Match the Playwright image version to the installed test package.
+The optional real-API discount browser cases require `E2E_DISCOUNT_CODE` to name a
+test-only campaign already provisioned in the isolated API database. API tests
+create their own temporary campaign data and never depend on an external offer.
+
+The checkout suite exercises the real API for successful orders, declines, and lost
+success-response recovery. It also covers cart edits/persistence, network errors,
+price conflicts, cross-tab preservation, rounding, corrupt storage, and mobile
+keyboard interaction. Discount API tests cover expiry between quote and checkout;
+the browser's expiry-review case simulates the checkout rejection after a real quote.
+This remains a simulator: real payments, authentication, tax/shipping calculation,
+refunds, and inventory management are out of scope.
 
 ## Installation
 

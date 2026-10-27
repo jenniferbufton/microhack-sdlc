@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import sqlite3
+
 from database.sqlite import get_connection
 from models.order import CreateOrderRequest, Order, UpdateOrderRequest
 from repositories._helpers import build_update_statement, execute_with_changes
-from utils.errors import DatabaseException, NotFoundException
+from utils.errors import ConflictException, DatabaseException, NotFoundException
 
 
 class OrdersRepository:
@@ -71,8 +73,11 @@ class OrdersRepository:
         return updated
 
     async def delete(self, order_id: int) -> None:
-        async with get_connection() as connection:
-            changes = await execute_with_changes(connection, "DELETE FROM orders WHERE order_id = ?;", (order_id,))
+        try:
+            async with get_connection() as connection:
+                changes = await execute_with_changes(connection, "DELETE FROM orders WHERE order_id = ?;", (order_id,))
+        except sqlite3.IntegrityError as exc:
+            raise ConflictException("Order has a checkout receipt and cannot be deleted") from exc
         if changes == 0:
             raise NotFoundException("Order", order_id)
 

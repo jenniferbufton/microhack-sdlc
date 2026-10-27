@@ -22,8 +22,8 @@ the Challenge 3 optional stretch.
 2. Use the acceptance criteria as your definition of done.
 3. Keep the diff scoped and consistent with the existing codebase; add tests for the new logic.
 
-> **Recommended starting point:** _Payment integration for the cart_ — it's the natural continuation of
-> the cart feature from Challenge 2.
+> **Completed:** _Payment integration for the cart_ has been delivered using the agreed demo payment
+> simulator. Real charges are not supported. Choose an outstanding item below.
 
 ## Priority & sizing legend
 
@@ -32,8 +32,9 @@ the Challenge 3 optional stretch.
 
 ---
 
-## 1. Payment integration for the cart ⭐ (recommended)
+## 1. Payment integration for the cart (done)
 
+- **Status:** Done — agreed demo payment simulator; no real charges
 - **Priority:** High
 - **Size:** M
 - **Affected layers:** frontend, API
@@ -44,10 +45,10 @@ the Challenge 3 optional stretch.
 
 **Acceptance criteria**
 
-- [ ] A customer can start a checkout from the cart and submit payment details through a dedicated flow.
-- [ ] A successful payment converts the cart into an order (with order details) via the API.
-- [ ] Payment configuration (keys/provider) is read from environment variables — no secrets in source.
-- [ ] Failed or declined payments surface a clear error and leave the cart intact.
+- [x] A customer can start a checkout from the cart and submit payment details through a dedicated flow.
+- [x] A successful payment converts the cart into an order (with order details) via the API.
+- [x] Payment configuration (keys/provider) is read from environment variables — no secrets in source.
+- [x] Failed or declined payments surface a clear error and leave the cart intact.
 
 ---
 
@@ -182,3 +183,38 @@ the Challenge 3 optional stretch.
 - [ ] The API returns a consistent validation error for bad quantities.
 - [ ] The cart UI shows an inline message and blocks the update/checkout until it's fixed.
 - [ ] The validation logic has unit-test coverage.
+
+---
+
+## 9. Discount codes at checkout
+
+- **Priority:** High
+- **Size:** M
+- **Affected layers:** frontend, API, database
+- **Suggested label:** `backlog`, `priority:high`
+
+> As a customer, I want to apply a discount code at checkout so that I can redeem a promised offer and
+> see the correct total before placing my order. Marketing, Sales, and Support have independently
+> raised this need for launch.
+
+**Acceptance criteria**
+
+- [x] Checkout provides a labelled discount-code field with Apply and Remove actions.
+- [x] Applying a valid, unexpired code displays the applied code, discount amount, and revised total.
+- [x] Invalid or expired codes produce a clear error without changing the cart or previously confirmed total.
+- [x] Removing a code or changing cart quantities recalculates the discount and total.
+- [x] The API validates the code and calculates the authoritative discount and total during checkout;
+      client-supplied discount amounts are not trusted.
+- [x] If a code becomes invalid before submission, checkout requires the customer to review the revised
+      total rather than silently placing an order at full price.
+- [x] Successful orders retain the applied code and discount amount, and confirmation shows the matching
+      final total.
+- [x] Tests cover valid, invalid, and expired codes, code removal, changed quantities, and expiry between
+      applying a code and submitting checkout.
+
+**Scope & assumptions**
+
+- Proposed initial scope: one percentage-based code per order, applied after existing product discounts.
+- The specific campaign code, percentage, and UTC expiry must be supplied before rollout. Branch-specific
+  eligibility is out of scope, and no live campaign is created or seeded by this implementation.
+- Campaign-management UI, code stacking, and usage limits are out of scope for the initial slice.

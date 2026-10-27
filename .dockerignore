@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/test-results
+**/playwright-report
+**/coverage
+**/.env*
+**/*.db
+**/*.sqlite
+src/api-py/tests
+src/api-py/data
+src/frontend/dist
