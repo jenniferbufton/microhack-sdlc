@@ -80,6 +80,11 @@ equivalent scoped permissions at the parent scope. Prefer a dedicated identity
 and the narrowest workable scope. No client secret or ACR admin password is
 stored in GitHub.
 
+The OIDC identity also needs `Reader` at the subscription scope so Azure CLI can
+discover the subscription during login. `scripts/setup-oidc.sh` grants this
+alongside the requested role at the resource-group scope; the account running
+that script must be allowed to create both role assignments.
+
 ## Local validation
 
 From the repository root:

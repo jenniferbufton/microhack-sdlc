@@ -8,9 +8,9 @@
 #   - No Application Administrator / directory write privileges required.
 #   - It can additionally be attached to Azure resources (ACR pull, Key Vault, ...).
 #
-# Creates the identity, grants it Contributor on the target resource group, adds
-# federated credentials for this repo, and pushes the ids into GitHub Actions
-# secrets/variables.
+# Creates the identity, grants it Reader on the subscription and the requested
+# role on the target resource group, adds federated credentials for this repo,
+# and pushes the ids into GitHub Actions secrets/variables.
 #
 # Prereqs: az login, and (optionally) gh auth login with a token that can write
 # Actions secrets. If the gh write fails the values are printed for manual entry.
@@ -97,16 +97,31 @@ read -r CLIENT_ID PRINCIPAL_ID IDENTITY_RESOURCE_ID <<<"$(az identity show \
   --resource-group "$RESOURCE_GROUP" \
   --query "[clientId, principalId, id]" -o tsv | paste -s)"
 
-# --- 3. Role assignment (scoped to the resource group) -----------------------
+# --- 3. Role assignments ------------------------------------------------------
+assign_role_if_missing() {
+  local role="$1" scope="$2"
+  if [[ "$(az role assignment list \
+             --assignee-object-id "$PRINCIPAL_ID" \
+             --scope "$scope" \
+             --query "[?roleDefinitionName=='$role' && scope=='$scope'] | length(@)" \
+             -o tsv)" == "0" ]]; then
+    az role assignment create \
+      --assignee-object-id "$PRINCIPAL_ID" \
+      --assignee-principal-type ServicePrincipal \
+      --role "$role" \
+      --scope "$scope" \
+      -o none
+  fi
+}
+
+# Subscription Reader lets Azure CLI discover the subscription during OIDC
+# login. Keep deployment permissions scoped to the resource group.
+SUBSCRIPTION_SCOPE="/subscriptions/$SUBSCRIPTION_ID"
+assign_role_if_missing "Reader" "$SUBSCRIPTION_SCOPE"
+echo "✓ Reader granted on $SUBSCRIPTION_SCOPE"
+
 SCOPE="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
-# --assignee-object-id + principal type skips the Graph lookup, which also avoids
-# a race against replication of a freshly created identity.
-az role assignment create \
-  --assignee-object-id "$PRINCIPAL_ID" \
-  --assignee-principal-type ServicePrincipal \
-  --role "$ROLE" \
-  --scope "$SCOPE" \
-  -o none 2>/dev/null || true
+assign_role_if_missing "$ROLE" "$SCOPE"
 echo "✓ $ROLE granted on $SCOPE"
 
 # --- 4. Federated credentials ------------------------------------------------
