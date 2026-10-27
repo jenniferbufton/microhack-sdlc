@@ -1,121 +1,76 @@
-# OctoSupply Source Code
+# OctoSupply source code
 
-This directory contains the OctoSupply application source code, a full-stack supply chain management platform with multiple API language implementations and a shared React frontend. The source represents a production-quality demonstration application for cat tech products and serves as the foundation for this Hackathon.
+This directory contains the OctoSupply application: a React frontend, two API
+implementations, and shared SQLite migrations and seed data. The APIs are not
+guaranteed to have identical feature coverage; the Python API is the primary
+track for checkout and Azure deployment.
 
-## Directory Structure
+## Current layout
 
-### `/api-ts`
-Express.js TypeScript backend API server (port **3000**)
-- RESTful routes for products, orders, suppliers, branches, deliveries, and inventory
-- SQLite database with migrations and seed data
-- Comprehensive test coverage with Vitest
-- TypeScript type definitions and validation
+| Path | Purpose |
+| --- | --- |
+| `api-py/` | FastAPI API (Python 3.10+), listening on port 3000 |
+| `api-cs/` | ASP.NET Core API (.NET 10), listening on port 3000 |
+| `api-cs-tests/` | xUnit tests for the C# API |
+| `frontend/` | React + TypeScript + Vite frontend; Vite uses port 5137 |
+| `database/migrations/` | Shared, ordered SQLite schema migrations |
+| `database/seed/` | SQL seed data applied when the database is empty |
+| `docs/` | Architecture, build, deployment, SQLite, and observability guides |
 
-### `/api-cs`
-ASP.NET Core .NET 10 backend API server (port **3000**)
-- Port of the TypeScript API using C# records, repositories, and controllers
-- Microsoft.Data.Sqlite with shared migration SQL
-- Swashbuckle OpenAPI/Swagger documentation
+The TypeScript and Java API directories described by older material are not
+present in this checkout. The `Makefile` still contains aggregate targets that
+reference those removed tracks; use only the track-specific commands below.
 
-### `/api-cs-tests`
-C# test project for the .NET API
-- xUnit-based tests for repository and API behavior
-- Runs via `make test-cs`
-- References `/api-cs` as the system under test
+## Install
 
-### `/api-py`
-FastAPI backend API server (port **3000**)
-- Port of the TypeScript API using Pydantic models, async repositories, and APIRouters
-- aiosqlite with shared migration SQL
-- FastAPI built-in OpenAPI/Swagger documentation
+Run commands from this directory. Install only the API track and frontend you
+intend to use:
 
-### `/api-java`
-Spring Boot 3 backend API server (port **3000**)
-- Port of the TypeScript API using Java records, JdbcTemplate repositories, and @RestControllers
-- sqlite-jdbc with shared migration SQL
-- SpringDoc OpenAPI documentation
-
-### `/database`
-Shared database schema — used by all API variants
-- `migrations/` — SQL migration files applied in order at startup
-- `seed/` — SQL seed data files for initial data population
-
-### `/frontend`
-React 18 TypeScript frontend application (port **5137**)
-- Vite build tool for fast development and optimized production builds
-- Tailwind CSS for styling
-- Configurable API URL via `VITE_API_URL` environment variable (targets any API variant)
-
-### `/docs`
-Architecture and development documentation
-- System architecture overview
-- Database design and SQLite integration
-- Build and deployment procedures
-
-### `Makefile`
-Cross-platform build automation supporting all language variants.
-
-## Quick Start
-
-```bash
-# In the dev container, dependencies are installed during creation.
-
-# Outside the dev container, install dependencies manually.
-make install
-
-# Start with TypeScript API (default, port 3000)
-make dev
-
-# Start with a specific API variant
-make dev-ts            # TypeScript API (port 3000) + frontend
-make dev-cs            # C# API       (port 3000) + frontend
-make dev-py            # Python API   (port 3000) + frontend
-make dev-java          # Java API     (port 3000) + frontend
-
-# Start API only (no frontend)
-make dev-api-ts
-make dev-api-cs
-make dev-api-py
-make dev-api-java
-
-# Install dependencies for a specific variant
-make install-ts
-make install-cs
-make install-py
-make install-java
-
-# Build
-make build-ts
-make build-cs
-make build-py
-make build-java
-
-# Test
-make test-ts
-make test-cs
-make test-py
-make test-java
+```sh
+make install-py install-frontend
 ```
 
-## API Variants — Port Reference
+For the C# API, use `make install-cs install-frontend` instead.
 
-| Variant    | Port | Framework             | Language   |
-|------------|------|-----------------------|------------|
-| TypeScript | 3000 | Express.js            | TypeScript |
-| C#         | 3000 | ASP.NET Core .NET 10  | C#         |
-| Python     | 3000 | FastAPI               | Python     |
-| Java       | 3000 | Spring Boot 3         | Java       |
-| Frontend   | 5137 | React 18 + Vite       | TypeScript |
+## Build and test
 
-All API variants expose the same REST endpoints and connect to a SQLite database at `./data/app.db` by default. Override with the `DB_FILE` environment variable.
+| Track | Build / validation | Tests |
+| --- | --- | --- |
+| Python API | `make build-py` | `make test-py` |
+| C# API | `make build-cs` | `make test-cs` |
+| Frontend | `make build-frontend` | `make test-frontend` |
 
-Swagger/OpenAPI docs are available at `/api-docs` for each running API.
+Run frontend linting from `frontend/` with `npm run lint`. The frontend
+Playwright tests may require browser installation; `make test-frontend`
+installs Chromium if it is not already cached.
 
-## Technology Stack
+## Run locally
 
-- **TypeScript API**: Node.js, Express.js, better-sqlite3
-- **C# API**: .NET 10, ASP.NET Core, Microsoft.Data.Sqlite, Swashbuckle
-- **Python API**: Python 3.11+, FastAPI, aiosqlite, Pydantic v2
-- **Java API**: Java 21, Spring Boot 3, sqlite-jdbc, SpringDoc OpenAPI
-- **Frontend**: React 18, Vite, Tailwind CSS, Playwright (E2E)
-- **Database**: SQLite (shared schema in `/database`)
+Start the Python API and frontend together:
+
+```sh
+make dev-py
+```
+
+Or use `make dev-cs` for the C# API. Both serve the API on port 3000 and the
+frontend on port 5137. `make dev-api-py` and `make dev-api-cs` start only the
+selected API.
+
+Avoid the default `make dev` target: it still starts the removed TypeScript API.
+The aggregate `make install`, `make build`, `make test`, and `make lint` targets
+also include that missing track. The Makefile has stale Java targets as well.
+
+## API and database notes
+
+- The Python API provides Swagger UI at `/docs`; the C# API exposes OpenAPI JSON
+  at `/api-docs.json`.
+- Both APIs apply shared SQL migrations and seed data on startup.
+- `DB_FILE` overrides the default `./data/app.db` path, which is relative to the
+  API process's working directory. Start the API from its own directory so the
+  relative migration and seed paths resolve correctly.
+- The Azure deployment uses the Python API. Its SQLite file is on the container
+  filesystem and is not durable across container replacement.
+
+See [build and test](docs/build.md), [architecture](docs/architecture.md),
+[SQLite integration](docs/sqlite-integration.md), and
+[system overview and deployment](docs/system-overview-and-deployment.md).

@@ -1,4 +1,4 @@
-# Walkthrough Challenge 7 - Agentic workflows
+# Walkthrough Challenge 7 - Documentation upkeep
 
 **[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-06/solution-06.md) - [Finish](../../challenges/finish.md)
 
@@ -6,56 +6,77 @@ Duration: 30 minutes
 
 ## Prerequisites
 
-Complete [Challenge 6](../challenge-06/solution-06.md). Confirm agentic-workflow / agent capabilities are enabled for your org.
+Complete [Challenge 6](../challenge-06/solution-06.md). Confirm GitHub Agentic
+Workflows and the Copilot engine are enabled for the repository or organization.
+Install the `gh-aw` GitHub CLI extension before compiling the workflow.
 
-## Approach
+## Workflow design
 
-The closing challenge: agents don't just build, they **sustain**. Keep it focused — start with a **low-risk task** so you get a working workflow rather than an ambitious half-built one. Make sure you actually **trigger and observe** it.
+The repository's low-risk maintenance task is checking user-facing documentation
+against the current source tree. The workflow imports the reusable
+[documentation-maintainer agent](../../.github/agents/documentation-maintainer.agent.md)
+for evidence-based review guidance; the workflow itself sets the task scope,
+tools, triggers, and safe outputs. The authoring source is
+[`.github/workflows/docs-upkeep.md`](../../.github/workflows/docs-upkeep.md);
+the compiled GitHub Actions file is
+[`.github/workflows/docs-upkeep.lock.yml`](../../.github/workflows/docs-upkeep.lock.yml).
 
-Suggested pacing:
+The workflow:
 
+- Runs weekly on Monday and can also be dispatched manually.
+- Gives the agent read-only repository access. A separate safe-output job can
+  create at most one draft pull request.
+- Restricts proposed changes to an allowlist of user-facing Markdown files;
+  source code, workflows, agent instructions, backlog data, and generated files
+  are outside its scope.
+- Uses the dedicated `automation/docs-upkeep` branch and targets `main`.
+- Has no pull-request trigger, so updating its own PR does not start another run.
+- Requires human review and merge. It does not merge or push directly to `main`.
+
+The prompt requires the agent to ground corrections in repository files, run
+relevant available checks, and report checks honestly. If there is no verified
+documentation drift, the expected result is a no-op rather than an empty PR.
+
+## Compile and inspect
+
+From the repository root, compile the source and inspect the generated workflow:
+
+```sh
+gh aw compile docs-upkeep --gh-aw-ref 32ecafbc061c9af57e9361942099e381102ae304 --strict --validate
 ```
-Identify a maintenance task              ~5 min
-Author the agentic workflow             ~12 min
-Define triggers + guardrails             ~5 min
-Test the workflow                        ~5 min
-Review the output                        ~3 min
-```
 
-### Task 1: Identify a low-risk maintenance task
+This is the immutable commit SHA for the audited `gh-aw` v0.93.5 release, which
+is pinned in the generated workflow. When intentionally upgrading, audit the
+new release and use its commit SHA.
+Commit the source and generated lock file together. Confirm the lock file keeps
+the weekly and manual triggers, read-only agent permissions, draft-PR safe
+output, strict documentation allowlist, and no direct default-branch write path.
 
-- Choose a recurring task: **issue triage/labelling** (great first choice), dependency updates, test/lint on change, or docs upkeep. Automate code-changing tasks only once the pattern works.
+## Run and review
 
-### Task 2: Author the workflow
+After the workflow is available on the default branch, open **Actions →
+Documentation upkeep → Run workflow** and dispatch it. To verify a positive
+maintenance case when `main` has no actionable drift, use a temporary branch
+with one deliberately stale, user-facing Markdown statement. Do not put test
+drift on `main`.
 
-- Create a GitHub Agentic Workflow that performs that one task autonomously.
+Review the resulting draft PR before considering the run successful:
 
-### Task 3: Define triggers and guardrails
+1. Confirm every changed claim against source code, manifests, Dockerfiles,
+   infrastructure, or the deployment workflow.
+2. Confirm all changed paths are allowed user-facing Markdown and no generated,
+   code, instruction, or backlog file is included.
+3. Check relative links and the reported validation results.
+4. Close the test-only PR without merging and remove its test output branch when
+   it is no longer needed. Real documentation changes still require normal
+   human review and merge.
 
-- 🔑 Configure exactly **when** it runs (schedule / PR / issue) and **constrain what it may do** — least privilege. The agent should only touch what its task needs.
+If GitHub does not expose the workflow or dispatch fails, verify that the
+compiled lock file is on the default branch, the repository allows the
+required GitHub Actions and Copilot workflow features, and the actor has
+permission to dispatch workflows. Do not treat compilation alone as proof of
+a successful hosted run.
 
-### Task 4: Test the workflow
-
-- Trigger it against real repo state and watch the agent complete the task. If it doesn't fire, check the trigger config matches the event you're testing and that permissions allow it.
-
-### Task 5: Review the output
-
-- Inspect the agent's actions for correctness and safety before trusting/enabling it broadly. If it did something unexpected, that's the teaching moment — tighten scope and re-run.
-
-## Common blockers
-
-- **Workflow too ambitious (auto-changing code)** → start with triage/labelling.
-- **Doesn't trigger** → trigger config mismatch or insufficient permissions.
-- **Over-broad permissions** → tighten to least privilege.
-- **No-op / nothing to review** → ensure the task is real and the trigger fired against actual state.
-
-## Optional stretch — package a reusable skill / slash command
-
-- Pick a repeatable manual flow (e.g. "read instructions → scaffold tests → run validation").
-- Package it as a reusable **skill or slash command** so it's invocable in one step.
-- Invoke it against a real task and confirm the steps run.
-- Document where **human review stays mandatory** (e.g. before merging generated tests or committing changes).
-
-You successfully completed challenge 7 — and the full Agentic SDLC arc: **plan → build → test → review → deploy → monitor → maintain**, all with agents. 🚀🚀🚀
-
-Head to the [Finish](../../challenges/finish.md) page.
+You successfully completed challenge 7 when the workflow compiles, a manual
+run is observed, and any proposed documentation update has been reviewed for
+accuracy and scope.

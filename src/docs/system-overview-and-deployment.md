@@ -2,6 +2,10 @@
 
 This guide explains how the frontend, API, and database fit together, and how to deploy the API and frontend. For the detailed component and data model, see [architecture.md](./architecture.md) and [sqlite-integration.md](./sqlite-integration.md).
 
+The repository also contains a C# API for local exercises. The Azure deployment
+described here uses the Python API; the two implementations do not have
+guaranteed feature parity.
+
 ## How the pieces fit together
 
 ```mermaid
